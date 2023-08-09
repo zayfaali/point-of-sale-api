@@ -57,4 +57,25 @@ router.get("/getstores", fetchadmin, async (req, res) => {
   }
 });
 
+// get the store details through the item store id
+//api/stores/:itemStoreID
+router.get("/:itemStoreID", async (req, res) => {
+  try {
+    const itemStoreID = req.params.itemStoreID;
+
+    const store = await Store.findOne({ _id: itemStoreID });
+
+    if (!store) {
+      return res
+        .status(404)
+        .json({ message: "Store not found for the given itemStoreID." });
+    }
+
+    res.json(store);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;

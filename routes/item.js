@@ -28,7 +28,7 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const itemStore = Store.find({ id: itemStoreID });
+      const itemStore = await Store.findOne({ _id: itemStoreID });
       if (!itemStore) {
         return res.status(404).send("Item Store Not Found");
       }
@@ -50,26 +50,69 @@ router.post(
   }
 );
 
-// ROUTE 2 : get all items for the specific store
-// api/item/getitems
+// ROUTE 3: Get all items and sort them
+router.post("/getallitems", async (req, res) => {
+  try {
+    // Extract sorting parameter from the request body
+    const { sortingString } = req.body;
 
-router.get(
-  "/getitems",
-  [body("itemStoreID", "Enter a valid ID").isAlphanumeric()],
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+    console.log("Received sortingString:", sortingString);
+
+    let sortOptions = {};
+
+    // Define default sorting options
+    sortOptions = { itemPrice: 1 };
+
+    // If a sorting string is provided, override the default sorting options
+    if (sortingString) {
+      switch (sortingString.toLowerCase()) {
+        case "priceascending":
+          sortOptions = { itemPrice: 1 };
+          break;
+        case "pricedescending":
+          sortOptions = { itemPrice: -1 };
+          break;
+        case "alphabeticalorder":
+          sortOptions = { itemName: 1 };
+          break;
+        default:
+          return res
+            .status(400)
+            .json({ message: "Invalid sortingString, Sorted By itemPrice" });
+      }
     }
 
-    try {
-      const items = await Item.find({ itemStoreID: req.body.itemStoreID });
-      res.json(items);
-    } catch (error) {
-      console.error(error.message);
-      res.status(500).send("Internal Server Error");
-    }
+    console.log("Sorting options:", sortOptions);
+
+    // Find all items and sort them based on the provided sorting options
+    const items = await Item.find().sort(sortOptions).exec();
+
+    res.json(items);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
-);
+});
+
+// ROUTE 2 : get all items for the specific store
+
+router.get("/store/:itemStoreID", async (req, res) => {
+  try {
+    const itemStoreID = req.params.itemStoreID;
+
+    const items = await Item.find({ itemStoreID: itemStoreID });
+
+    if (items.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No items found for the given itemStoreID." });
+    }
+
+    res.json(items);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 module.exports = router;
