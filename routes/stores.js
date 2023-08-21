@@ -78,4 +78,47 @@ router.get("/:itemStoreID", async (req, res) => {
   }
 });
 
+//Route 3 : update existing store
+
+router.put("/update-store/:storeid", async (req, res) => {
+  try {
+    const { storeName, storeDesc, storePic, storeLocation } = req.body;
+    const newStore = {};
+
+    if (storeName) {
+      newStore.storeName = storeName;
+    }
+    if (storeDesc) {
+      newStore.storeDesc = storeDesc;
+    }
+    if (storePic) {
+      newStore.storePic = storePic;
+    }
+    if (storeLocation) {
+      newStore.storeLocation = storeLocation;
+    }
+
+    //Find the store to be updated
+
+    let store = await Store.findById(req.params.storeid);
+    if (!store) {
+      return res.status(404).send("Store Not Found");
+    }
+
+    // set the new note in the database
+
+    store = await Store.findByIdAndUpdate(
+      req.params.storeid,
+      {
+        $set: newStore,
+      },
+      { new: true }
+    );
+    res.json({ store });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;

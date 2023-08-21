@@ -23,6 +23,10 @@ const ItemSchema = new Schema({
     type: Number,
     required: true,
   },
+  inStock: {
+    type: Number,
+    default: 100,
+  },
 });
 
 const Item = mongoose.model("item", ItemSchema);

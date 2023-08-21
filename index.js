@@ -14,6 +14,8 @@ app.use(express.json());
 app.use("/api/adminauth", require("./routes/adminAuthentication"));
 app.use("/api/stores", require("./routes/stores"));
 app.use("/api/item", require("./routes/item"));
+app.use("/api/payments", require("./routes/payment"));
+app.use("/api/order", require("./routes/orders"));
 
 app.listen(port, () => {
   console.log(`Point Of Sale backend is listening at http://localhost:${port}`);

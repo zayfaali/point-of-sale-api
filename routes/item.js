@@ -56,8 +56,6 @@ router.post("/getallitems", async (req, res) => {
     // Extract sorting parameter from the request body
     const { sortingString } = req.body;
 
-    console.log("Received sortingString:", sortingString);
-
     let sortOptions = {};
 
     // Define default sorting options
@@ -81,8 +79,6 @@ router.post("/getallitems", async (req, res) => {
             .json({ message: "Invalid sortingString, Sorted By itemPrice" });
       }
     }
-
-    console.log("Sorting options:", sortOptions);
 
     // Find all items and sort them based on the provided sorting options
     const items = await Item.find().sort(sortOptions).exec();
@@ -112,6 +108,43 @@ router.get("/store/:itemStoreID", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Route 2 : api/items/update-stocks
+router.post("/update-stock", async (req, res) => {
+  try {
+    const { cartItems } = req.body;
+
+    for (const cartItem of cartItems) {
+      const { _id, quantity } = cartItem;
+
+      // Find the item by its _id
+      const item = await Item.findById(_id);
+
+      if (!item) {
+        return res
+          .status(404)
+          .json({ message: `Item with _id ${_id} not found.` });
+      }
+
+      // Check if there's enough stock
+      if (item.inStock < quantity) {
+        return res
+          .status(400)
+          .json({ message: `Not enough stock for item with _id ${_id}.` });
+      }
+
+      // Decrement the inStock value
+      item.inStock -= quantity;
+
+      // Save the updated item
+      await item.save();
+    }
+
+    res.status(200).json({ message: "Stock updated successfully." });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error." });
   }
 });
 
